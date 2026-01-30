@@ -1,25 +1,20 @@
 <template>
   <header class="header">
     <div class="container nav">
-      <h1>
-        <router-link to="/">✨ Scripts</router-link>
-      </h1>
+      <h1><router-link to="/">✨ Scripts</router-link></h1>
       <nav>
-        <router-link to="/">🏠<span class="nav-text">Home</span></router-link>
+        <router-link to="/">🏠 Home</router-link>
         
         <template v-if="isLoggedIn">
-          <span class="user-display">
-            👤<span class="nav-text">{{ username }}</span>
-          </span>
-          <router-link to="/my-scripts">📂<span class="nav-text">My Scripts</span></router-link>
+          <router-link to="/myscripts">📂 My Scripts</router-link>
+          <span class="user-display">👤 {{ username }}</span>
+          <button @click="handleLogout" class="logout">🚪 Logout</button>
         </template>
 
-        <router-link v-if="!isLoggedIn" to="/login">🔐<span class="nav-text">Login</span></router-link>
-        <router-link v-if="!isLoggedIn" to="/register">✨<span class="nav-text">Register</span></router-link>
-        
-        <button v-if="isLoggedIn" class="logout" @click="logout">
-          🚪<span class="logout-text">Logout</span>
-        </button>
+        <template v-else>
+          <router-link to="/login">🔐 Login</router-link>
+          <router-link to="/register">📝 Register</router-link>
+        </template>
       </nav>
     </div>
   </header>
@@ -29,47 +24,42 @@
 export default {
   data() {
     return {
+      // Initialize state
+      isLoggedIn: !!localStorage.getItem("token"),
       username: ""
     };
   },
-  computed: {
-    isLoggedIn() {
-      return !!localStorage.getItem("token");
-    },
-  },
   watch: {
-    '$route': 'loadUser'
+    // Watch for route changes to re-check login status
+    '$route'() {
+      this.checkLoginStatus();
+    }
   },
-  mounted() {
-    this.loadUser();
+  created() {
+    this.checkLoginStatus();
   },
   methods: {
-    loadUser() {
+    checkLoginStatus() {
       const token = localStorage.getItem("token");
+      this.isLoggedIn = !!token;
+      
       if (token) {
         try {
+          // Decode the username from the JWT token if you store it there
           const payload = JSON.parse(atob(token.split('.')[1]));
-          this.username = payload.username || "Writer";
+          this.username = payload.username;
         } catch (e) {
-          this.username = "Writer";
+          this.username = "User";
         }
       }
     },
-    logout() {
+    handleLogout() {
       localStorage.removeItem("token");
-      this.username = "";
+      this.isLoggedIn = false;
       this.$router.push("/login");
-    },
-  },
+      // Optional: use your new toast
+      // this.toast.info("Logged out successfully");
+    }
+  }
 };
 </script>
-
-<style scoped>
-.user-display {
-  color: var(--neon-violet);
-  font-weight: 600;
-  padding: 0 10px;
-  border-left: 1px solid rgba(255,255,255,0.1);
-}
-/* Existing styles... */
-</style>
