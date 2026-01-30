@@ -1,6 +1,11 @@
 <template>
   <div class="container">
-    <h2 class="page-title">📂 My Published Scripts</h2>
+    <div class="header-row">
+      <h2 class="page-title">📂 My Published Scripts</h2>
+      <button v-if="myScripts.length > 0" class="btn-add-top" @click="$router.push('/scripts/new')">
+        + New Script
+      </button>
+    </div>
     
     <div v-if="myScripts.length > 0" class="scripts-grid">
       <div v-for="script in myScripts" :key="script._id" class="script-card">
@@ -10,6 +15,7 @@
         <div class="card-actions">
           <button @click="$router.push(`/scripts/${script._id}`)" class="btn-view">View</button>
           <button @click="$router.push(`/scripts/${script._id}/edit`)" class="btn-edit">Edit</button>
+          <button @click="deleteScript(script._id)" class="btn-delete">Delete</button>
         </div>
       </div>
     </div>
@@ -36,33 +42,54 @@ export default {
     };
   },
   async mounted() {
-    // 1. Get current user from token
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        this.currentUsername = payload.username;
-      } catch (e) {
-        console.error("Token decoding failed", e);
-      }
-    }
+    this.fetchScripts();
+  },
+  methods: {
+    async fetchScripts() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    // 2. Fetch all scripts and filter
-    try {
-      const res = await api.get("/scripts");
-      this.myScripts = res.data.filter(s => s.author?.username === this.currentUsername);
-    } catch (err) {
-      console.error("Error fetching your scripts", err);
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        this.currentUsername = payload.username;
+
+        const res = await api.get("/scripts");
+        this.myScripts = res.data.filter(
+          script =>
+            script.author &&
+            script.author.username === this.currentUsername
+        );
+      } catch (err) {
+        console.error("Failed to load scripts", err);
+      }
+    },
+    async deleteScript(id) {
+      if (confirm("Are you sure you want to delete this script?")) {
+        try {
+          await api.delete(`/scripts/${id}`);
+          this.myScripts = this.myScripts.filter(s => s._id !== id);
+        } catch (err) {
+          console.error("Delete failed", err);
+        }
+      }
     }
   }
 };
 </script>
 
 <style scoped>
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .scripts-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 .script-card {
@@ -82,14 +109,26 @@ export default {
   display: flex;
   gap: 10px;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
-.btn-view { background: #4a4e69; color: white; padding: 8px 18px; border-radius: 8px; cursor: pointer; border:none; transition: opacity 0.2s; }
-.btn-edit { background: var(--neon-violet); color: white; padding: 8px 18px; border-radius: 8px; cursor: pointer; border:none; transition: opacity 0.2s; }
+/* Button Styles */
+.btn-view { background: #4a4e69; color: white; padding: 8px 18px; border-radius: 8px; cursor: pointer; border:none; }
+.btn-edit { background: var(--neon-violet); color: white; padding: 8px 18px; border-radius: 8px; cursor: pointer; border:none; }
+.btn-delete { background: #ef4444; color: white; padding: 8px 18px; border-radius: 8px; cursor: pointer; border:none; }
+.btn-add-top { 
+  background: var(--neon-violet); 
+  color: white; 
+  padding: 10px 20px; 
+  border-radius: 10px; 
+  border: none; 
+  cursor: pointer;
+  font-weight: bold;
+}
 
-.btn-view:hover, .btn-edit:hover { opacity: 0.9; }
+.btn-view:hover, .btn-edit:hover, .btn-delete:hover, .btn-add-top:hover { opacity: 0.8; }
 
-/* Modern Empty State Styles */
+/* Empty State */
 .empty-state {
   display: flex;
   justify-content: center;
@@ -103,10 +142,9 @@ export default {
 }
 
 .empty-content p {
-  color: #cbd5e1; /* Soft gray-white text */
+  color: #cbd5e1;
   font-size: 1.2rem;
   margin-bottom: 2.5rem;
-  max-width: 400px;
 }
 
 .btn-primary-action {
@@ -118,17 +156,6 @@ export default {
   border: none;
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 20px rgba(157, 78, 221, 0.4);
-}
-
-.btn-primary-action:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(157, 78, 221, 0.6);
-  filter: brightness(1.15);
-}
-
-.btn-primary-action:active {
-  transform: translateY(0);
 }
 </style>

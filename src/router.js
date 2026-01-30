@@ -17,7 +17,7 @@ const routes = [
     component: Home 
   },
   { 
-    path: "/my-scripts", 
+    path: "/myScripts", 
     component: MyScripts,
     meta: { requiresAuth: true } // Protect this page
   },

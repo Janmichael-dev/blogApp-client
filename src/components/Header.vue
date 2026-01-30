@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <div class="container nav">
-      <h1><router-link to="/">✨ Scripts</router-link></h1>
+      <h1><router-link to="/">✨ Scripted</router-link></h1>
       <nav>
         <router-link to="/">🏠 Home</router-link>
         

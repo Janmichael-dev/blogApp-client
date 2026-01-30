@@ -1,7 +1,7 @@
 <template>
   <footer class="footer" id="footer">
     <div class="container footer-content">
-      <p>© 2026 My Blog</p>
+      <p>© 2026 Scripted</p>
       <div class="socials">
         <a href="https://facebook.com" target="_blank">Facebook</a>
         <a href="https://github.com" target="_blank">GitHub</a>
